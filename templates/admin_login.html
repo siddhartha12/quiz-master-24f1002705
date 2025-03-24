@@ -12,7 +12,7 @@
             <h1 class="text-center">Welcome to Quiz Master</h1>
         </div>
         <h3 class="text-center">Admin Login</h3>
-        <form action="admin/login" method="POST">
+        <form action="/admin/login" method="POST">
             <div class="mb-3">
                 <label for="username" class="form-label">Username (E-mail)</label>
                 <input type="text" id="username" name="username" class="form-control" required>
@@ -26,6 +26,11 @@
             <div class="d-grid">
                 <button type="submit" class="btn btn-primary">Login</button>
             </div>
+            {% if login_fail %}
+            <div>
+                <p>Invalid password</p>
+            </div>
+            {% endif %}
         </form>
     </div>
 
