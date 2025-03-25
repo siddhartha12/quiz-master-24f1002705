@@ -37,40 +37,40 @@
     <div class="container-lg p-4 vh-20 vw-100" style="background-color: #EEE; max-width:100%">
         <h1 style="padding-left: 40px; padding-top: 10px;">Welcome Admin</h1>
         <div style="padding-left: 40px; padding-top: 10px; padding-bottom: 10px">
-            <a href="{{ url_for('new_subject')}}"class="btn btn-primary">New Subject</a>
+            <a href="{{ url_for('new_quiz')}}"class="btn btn-primary">New Quiz</a>
         </div>
     </div>
     <div class="container vw-100"  style="text-align:center">
         <div class="container vw-100 p-4" style="text-align: center;">
-            <h1>Subjects</h1>
+            <h1>Quizzes</h1>
         </div>
         <div class="row">
-            {% for subject in subjects %}
+            {% for quiz in quizzes %}
             <div class="col-lg-4 col-md-6 col-sm-12 mb-3">
                 <div class="card p-1 shadow-lg ">
                     <div class="card-body">
                         <div class="p-4">
-                            <a href="{{ url_for('edit_subject', subject_id = subject['id']) }}">
+                            <a href="{{ url_for('view_quiz', quiz_id = quiz['id']) }}">
                                 <h1 class="text-center">
-                                    {{ subject['name'] }}
+                                    {{ quiz['name'] }}
                                 </h1>
                             </a>
                         </div>
-                        <table>
+                        <table style="width: 100%; text-align: center;">
                             <tr>
-                                <th>Chapter</th>
-                                <th>Number of Questions</th>
+                                <th>ID</th>
+                                <th>Q_title</th>
                                 <th> Actions </th>
                             </tr>
-                            {% for chapter in subject['chapters'] %}
+                            {% for question in quiz['questions'] %}
                             <tr>
-                                <td>{{ chapter['name'] }}</td>
-                                <td>{{ chapter['noq'] }}</td>
+                                <td>{{ question['id'] }}</td>
+                                <td>{{ question['name'] }}</td>
                                 <td inline>
-                                    <a href="{{ url_for('edit_chapter', subject_id = subject['id'], chapter_id = chapter['id']) }}" class="btn btn-primary" id="{{ subject['name'] + chapter['name']}}+Edit">
+                                    <a href="{{ url_for('edit_question', quiz_id = quiz['id'], question_id = question['id']) }}" class="btn btn-primary">
                                         Edit
                                     </a>
-                                    <a href="{{ url_for('delete_chapter', subject_id = subject['id'], chapter_id = chapter['id']) }}" class="btn btn-danger">
+                                    <a href="{{ url_for('delete_question', quiz_id = quiz['id'], question_id = question['id']) }}" class="btn btn-danger">
                                         Delete
                                     </a>
                                 </td>
@@ -80,7 +80,7 @@
                                 <td></td>
                                 <td></td>
                                 <td class="actions">
-                                    <a href="{{ url_for('new_chapter', subject_id = subject['id']) }}" class = "btn btn-primary" style="background-color: limegreen; border: limegreen;">
+                                    <a href="{{ url_for('new_question', subject_id = quiz['subject_id'], quiz_id = quiz['id']) }}" class = "btn btn-primary" style="background-color: limegreen; border: limegreen;">
                                         New Chapter
                                     </a>
                                 </td>

@@ -17,6 +17,7 @@
             <div class="mb-3">
                 <label for="username" class="form-label">Username (E-mail)</label>
                 <input type="text" id="username" name="username" class="form-control" required>
+                {{ message }}
             </div>
 
             <div class="mb-3">
@@ -26,24 +27,12 @@
 
             <div class="mb-3">
                 <label for="full-name" class="form-label">Full Name</label>
-                <input type="text" id="full-name" name="full-name" class="form-control" required>
+                <input type="text" id="name" name="name" class="form-control" required>
             </div>
 
             <div class="mb-3">
                 <label for="Qualification" class="form-label">Qualification</label>
                 <input type="" list="qualification" id="qualification" name="qualification" class="form-control" required>
-                <datalist id="qualification">
-                    <option value="10th">10th</option>
-                    <option value="12th">12th</option>
-                    <option value="Undergraduate">Undergraduate</option>
-                    <option value="Postgraduate">Postgraduate</option>
-                    <option value="Doctorate">Doctorate</option>
-                </datalist>
-            </div>
-
-            <div class="mb-3">
-                <label for="password" class="form-label">Date of Birth</label>
-                <input type="date" id="date" name="date" class="form-control" required>
             </div>
 
             <div class="d-grid">

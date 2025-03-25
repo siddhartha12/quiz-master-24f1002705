@@ -34,37 +34,52 @@
     </div>
 </header>
 <body>
-    <!--<div class="container-lg p-4 vh-20 vw-100" style="background-color: #EEE; max-width:100%">
-        <h1 style="padding-left: 40px; padding-top: 10px;">Welcome Admin</h1>
-        <div style="padding-left: 40px; padding-top: 10px; padding-bottom: 10px">
-            <a href="{{ url_for('new_subject')}}"class="btn btn-primary">New Subject</a>
-        </div>
-    </div>-->
     <div class="container vw-100"  style="text-align:center">
         <div class="container vw-100 p-4" style="text-align: center;">
-            <h1>Edit Chapter</h1>
+            <h1>View Quiz</h1>
         </div>
         <div class="card p-1 shadow-lg ">
             <div class="card-body">
                 <div class="p-4">
                     <h1 class="text-center">
-                        {{ chapter['subject_name'] }}
+                        {{ quiz['name'] }}
                     </h1>
                 </div>
-                <form action="{{ url_for('edit_chapter', subject_id = chapter['subject_id'], chapter_id = chapter['id']) }}" method="POST">
-                    <div class="p-4">
-                        <label for="name" name="name">Name</label>
-                        <input type="text" id="name" name="name" value="{{chapter['name']}}" class="form form-control">
-                    </div>
-                    <div class="p-4">
-                        <label for="description" name="description">Description</label>
-                        <input type="text" id="description" name="description" value="{{chapter['description']}}" class="form form-control">
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Submit</button>
-                    </div>
-                </form>
-                
+                <div class="p-4">
+                    <p class="text-center">
+                        <b>
+                            Subject: 
+                        </b>{{ quiz['subject'] }}
+                    </p>
+                </div>
+                <div class="p-4">
+                    <p class="text-center">
+                        <b>
+                            Chapter: 
+                        </b>{{ quiz['chapter'] }}
+                    </p>
+                </div>
+                <div class="p-4">
+                    <p class="text-center">
+                        <b>
+                            Date of Quiz: 
+                        </b>{{ quiz['date'] }}
+                    </p>
+                </div>
+                <div class="p-4">
+                    <p class="text-center">
+                        <b>
+                            Duration: 
+                        </b>{{ quiz['duration'] }}
+                    </p>
+                </div>
+                <div class="p-4">
+                    <p class="text-center">
+                        <b>
+                            Remarks: 
+                        </b>{{ quiz['remarks'] }}
+                    </p>
+                </div>
             </div>
         </div>            
     </div>

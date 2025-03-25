@@ -42,7 +42,7 @@
     </div>-->
     <div class="container vw-100"  style="text-align:center">
         <div class="container vw-100 p-4" style="text-align: center;">
-            <h1>Edit Chapter</h1>
+            <h1>Delete Chapter</h1>
         </div>
         <div class="card p-1 shadow-lg ">
             <div class="card-body">
@@ -51,17 +51,15 @@
                         {{ chapter['subject_name'] }}
                     </h1>
                 </div>
-                <form action="{{ url_for('edit_chapter', subject_id = chapter['subject_id'], chapter_id = chapter['id']) }}" method="POST">
-                    <div class="p-4">
-                        <label for="name" name="name">Name</label>
-                        <input type="text" id="name" name="name" value="{{chapter['name']}}" class="form form-control">
-                    </div>
-                    <div class="p-4">
-                        <label for="description" name="description">Description</label>
-                        <input type="text" id="description" name="description" value="{{chapter['description']}}" class="form form-control">
-                    </div>
+                <form action="{{ url_for('delete_chapter', subject_id = chapter['subject_id'], chapter_id = chapter['id']) }}" method="POST">
+                    
+                    <b><p>Name</p></b>
+                    <p>{{chapter['name']}}</p>
+                    <b><p>Description</p></b>
+                    <p>{{chapter['description']}}</p>
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <p>Are you sure you want to delete?</p>
+                        <button type="submit" class="btn btn-danger">Delete</button>
                     </div>
                 </form>
                 
