@@ -398,7 +398,7 @@ def quiz_management():
 
 # View upcoming quiz
 @app.route('/admin/quiz/edit', methods=['GET', 'POST'])
-def edit_quiz():
+def edit_quiz(): 
     # Get quiz id
     quiz_id = request.args.get('quiz_id')
 
