@@ -437,7 +437,7 @@ def edit_quiz():
     conn.close()
 
     # Render Webpage
-    return render_template('view_quiz.html', quiz=quiz)
+    return render_template('edit_quiz.html', quiz=quiz)
 
 @app.route('/admin/quiz/delete', methods=['GET','POST'])
 def delete_quiz():
@@ -726,17 +726,94 @@ def admin_summary():
 
 @app.route('/admin/logout')
 def admin_logout():
-    return
+    session.clear()
+
+    return redirect(url_for('login'))
 
 
 # student routes
 @app.route('/student/dashboard', methods=['GET', 'POST'])
 def student_dashboard():
-    return
+    #open db
+    conn = sqlite3.connect("app.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM quizzes WHERE date_of_quiz = date('now')")
+    quizzes_today_db = cursor.fetchall()
+
+    quizzes = []
+    for quiz in quizzes_today_db:
+        id = quiz[0]
+        name = quiz[1]
+        duration = quiz[5]
+        cursor.execute('SELECT COUNT(*) FROM questions WHERE quiz_id = ?', (id,))
+        output = cursor.fetchall()
+        noq = output[0][0]
+
+        quizzes.append({'id': id, 'name': name, 'duration': duration, 'noq': noq})
+
+    cursor.execute("SELECT * FROM quizzes WHERE date_of_quiz > date('now')")
+    upcoming_quizzes_db = cursor.fetchall()
+
+    upcoming_quizzes = []
+    for quiz in upcoming_quizzes_db:
+        id = quiz[0]
+        name = quiz[1]
+        date = quiz[4]
+        duration = quiz[5]
+        cursor.execute('SELECT COUNT(*) FROM questions WHERE quiz_id = ?', (id,))
+        output = cursor.fetchall()
+        noq = output[0][0]
+
+        upcoming_quizzes.append({'id': id, 'name': name, 'date': date,'duration': duration, 'noq': noq})
+
+    return render_template('user_dashboard.html', quizzes=quizzes, upcoming_quizzes = upcoming_quizzes)
 
 # Attempting the quiz
-@app.route('/student/att_quiz', methods=['GET', 'POST'])
-def a_quiz():
+@app.route('/student/quiz/view', methods=['GET', 'POST'])
+def view_quiz():
+    # Get quiz id
+    quiz_id = request.args.get('quiz_id')
+
+    #establish connection with db
+    conn = sqlite3.connect("app.db")
+    cursor = conn.cursor()
+
+    # get from db
+    cursor.execute("SELECT * FROM quizzes WHERE id = ?", (quiz_id,))
+    output = cursor.fetchall()
+
+    #initialize values from tuple
+    id = output[0][0]
+    name = output[0][1]
+    subject_id = output[0][2]
+    chapter_id = output[0][3]
+    date = output[0][4]
+    duration = output[0][5]
+    remarks = output[0][6]
+
+    # extract subject name
+    cursor.execute('SELECT name FROM subjects WHERE id = ?', (subject_id,))
+    sub_name_db = cursor.fetchall()
+    subject = sub_name_db[0][0]
+
+    #extract chapter name
+    cursor.execute('SELECT name FROM chapters WHERE id = ?', (chapter_id,))
+    ch_name_db = cursor.fetchall()
+    chapter = ch_name_db[0][0]
+
+    #Define dictionary for html
+    # INSERT INTO quizzes(id, name, subject_id, chapter_id, date_of_quiz, time_duration, remarks)
+    quiz = {'id': id, 'name': name,'subject': subject,'chapter': chapter,'date': date, 'duration': duration, 'remarks': remarks}
+
+    # Close connection
+    conn.close()
+
+    # Render Webpage
+    return render_template('view_quiz.html', quiz=quiz)
+
+@app.route('/student/quiz/start', methods=['GET', 'POST'])
+def start_quiz():
     return
 
 #View Quiz Scores

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard</title>
+    <title>Admin Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <style>
@@ -13,23 +13,19 @@
         padding-left: 10px;
         padding-right: 10px;
     }
-    tr {
-        margin-left: 10px;
-        margin-right: 10px;
-    }
 </style>
 <header class="container p-4 vh-20 vw-100" style="font-size: 25px; text-align: left; margin-left:0px;">
     <div>
-        <a href='/student/dashboard'>
+        <a href='/admin/dashboard'>
             Home
         </a>
-        <a href="/student/scores">
-            Scores
+        <a href="/admin/quiz">
+            Quiz
         </a>
-        <a href="/student/summary">
+        <a href="/admin/summary">
             Summary
         </a>
-        <a href="/student/logout">
+        <a href="/admin/logout">
             Log Out
         </a>
         <div style="position: absolute; right: 0; top: 0; padding-top: 20px; padding-right: 30px">
@@ -83,6 +79,13 @@
                             Remarks: 
                         </b>{{ quiz['remarks'] }}
                     </p>
+                </div>
+                <div class="p-4">
+                    <a href="{{ url_for('delete_quiz', quiz_id = quiz['id'])}}" >
+                        <button class="btn btn-danger">
+                            Delete Quiz
+                        </button>
+                    </a>
                 </div>
             </div>
         </div>            
