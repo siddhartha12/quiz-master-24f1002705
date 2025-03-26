@@ -211,6 +211,8 @@ def delete_chapter():
 
         # Modify into the Database
         cursor.execute("DELETE FROM chapters WHERE id = ? AND subject_id = ?", (chapter_id, subject_id))
+        cursor.execute("DELETE FROM quizzes WHERE chapter_id = ? AND subject_id = ?", (chapter_id, subject_id))
+        cursor.execute("DELETE FROM questions WHERE chapter_id = ? AND subject_id = ?", (chapter_id, subject_id))
 
         # Commit into db
         conn.commit()
@@ -360,7 +362,10 @@ def delete_subject():
 
         # write to subject
         cursor.execute("DELETE FROM subjects WHERE id = ?", (subject_id,))
-
+        cursor.execute("DELETE FROM chapters WHERE subject_id = ?", (subject_id,))
+        cursor.execute("DELETE FROM quizzes WHERE subject_id = ?", (subject_id,))
+        cursor.execute("DELETE FROM questions WHERE subject_id = ?", (subject_id,))
+        
         # commit and close
         conn.commit()
         conn.close()
@@ -392,8 +397,8 @@ def quiz_management():
     return render_template('quiz_management.html', quizzes = quizzes_send)
 
 # View upcoming quiz
-@app.route('/admin/quiz/view', methods=['GET', 'POST'])
-def view_quiz():
+@app.route('/admin/quiz/edit', methods=['GET', 'POST'])
+def edit_quiz():
     # Get quiz id
     quiz_id = request.args.get('quiz_id')
 
@@ -406,6 +411,7 @@ def view_quiz():
     output = cursor.fetchall()
 
     #initialize values from tuple
+    id = output[0][0]
     name = output[0][1]
     subject_id = output[0][2]
     chapter_id = output[0][3]
@@ -425,7 +431,7 @@ def view_quiz():
 
     #Define dictionary for html
     # INSERT INTO quizzes(id, name, subject_id, chapter_id, date_of_quiz, time_duration, remarks)
-    quiz = {'name': name,'subject': subject,'chapter': chapter,'date': date, 'duration': duration, 'remarks': remarks}
+    quiz = {'id': id, 'name': name,'subject': subject,'chapter': chapter,'date': date, 'duration': duration, 'remarks': remarks}
 
     # Close connection
     conn.close()
@@ -433,20 +439,284 @@ def view_quiz():
     # Render Webpage
     return render_template('view_quiz.html', quiz=quiz)
 
+@app.route('/admin/quiz/delete', methods=['GET','POST'])
+def delete_quiz():
+    # Get quiz id
+    quiz_id = request.args.get('quiz_id')
+
+    #establish connection with db
+    conn = sqlite3.connect("app.db")
+    cursor = conn.cursor()
+
+    #delete from db
+    cursor.execute('DELETE FROM quizzes WHERE id = ?', (quiz_id,))
+    cursor.execute('DELETE FROM questions WHERE quiz_id = ?', (quiz_id,))
+
+    #commit
+    conn.commit()
+
+    #close db
+    conn.close()
+
+    return redirect(url_for('quiz_management'))
+
 @app.route('/admin/quiz/add', methods=['GET', 'POST'])
 def new_quiz():
-    return
+    if request.method == 'GET':
+        #establish connection with db
+        conn = sqlite3.connect("app.db")
+        cursor = conn.cursor()
+
+        # retreieve list of subject id and name from db
+        cursor.execute('SELECT id, name FROM subjects')
+        subjects_db = cursor.fetchall()
+
+        # initliaze dictionary for render page
+        subjects = []
+        for subject in subjects_db:
+            subjects.append({'id': subject[0], 'name': subject[1]})
+
+        # retreive list of chapters from db
+        cursor.execute('SELECT id, name FROM chapters')
+        chapters_db = cursor.fetchall()
+
+        # initialize dictionary for render page
+        chapters = []
+        for chapter in chapters_db:
+            chapters.append({'id': chapter[0], 'name': chapter[1]})
+
+        # close db
+        conn.close()
+
+        #return template
+        return render_template('new_quiz.html', subjects = subjects, chapters=chapters)
+
+    elif request.method == 'POST':
+        # extract from form
+        name = request.form.get('name')
+        subject = int(request.form.get('subject'))
+        chapter = int(request.form.get('chapter'))
+        date = request.form.get('date')
+        time = request.form.get('duration')
+        remarks = request.form.get('remarks')
+
+        # Open db
+        conn = sqlite3.connect("app.db")
+        cursor = conn.cursor()
+
+        # Write to db
+        cursor.execute('INSERT INTO quizzes(name, subject_id, chapter_id, date_of_quiz, time_duration, remarks) VALUES (?, ?, ?, ?, ?, ?)', (name, subject, chapter, date, time, remarks))
+
+        # Commit db
+        conn.commit()
+
+        #Close db
+        conn.close()
+        
+        return redirect(url_for('quiz_management'))
+        #return render_template('new_quiz.html')
 
 @app.route('/admin/quiz/newq', methods=['GET', 'POST'])
 def new_question():
-    return
+    # if get
+    if request.method == 'GET':
+        # retrieve quiz_id from form
+        quiz_id = request.args.get('quiz_id')
+
+        # Open db
+        conn = sqlite3.connect("app.db")
+        cursor = conn.cursor()
+        
+        # find chapter, subject and quiz name from quiz_id
+        cursor.execute('SELECT chapter_id, subject_id FROM quizzes WHERE id = ?', (quiz_id,))
+        output = cursor.fetchall()
+        chapter_id = output[0][0]
+        subject_id = output[0][1]
+
+        #chapter name
+        cursor.execute('SELECT name FROM chapters WHERE id = ?', (chapter_id,))
+        output = cursor.fetchall()
+        chapter_name = output[0][0]
+
+        # quiz name
+        cursor.execute('SELECT name FROM quizzes WHERE id = ?', (quiz_id,))
+        output = cursor.fetchall()
+        quiz_name = output[0][0]
+
+        #subject name
+        cursor.execute('SELECT name FROM subjects WHERE id = ?', (subject_id,))
+        output = cursor.fetchall()
+        subject_name = output[0][0]
+
+        # initialize dict
+        quiz = {'id': quiz_id, 'name': quiz_name, 'chapter_id': chapter_id, 'chapter_name': chapter_name, 'subject_id': subject_id, 'subject_name': subject_name}
+
+        # close db
+        conn.close()
+
+        # output page
+        return render_template("new_question.html", quiz=quiz)
+
+    # if post
+    elif request.method =='POST':
+        # retreieve query elements
+        quiz_id = request.args.get('quiz_id')
+        chapter_id = request.args.get('chapter_id')
+        subject_id = request.args.get('subject_id')
+
+        # retreive form elements
+        name = request.form.get('name')
+        question = request.form.get('question')
+        a = request.form.get('a')
+        b = request.form.get('b')
+        c = request.form.get('c')
+        d = request.form.get('d')
+        correct = int(request.form.get('correct'))
+
+        #open db
+        conn = sqlite3.connect("app.db")
+        cursor = conn.cursor()
+
+        # write db
+        cursor.execute('INSERT INTO questions (name, quiz_id, chapter_id, subject_id, question_statement, option1, option2, option3, option4, correct_option) VALUES (? , ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                       (name, quiz_id, chapter_id, subject_id, question, a, b, c, d, correct))
+
+        # commit db
+        conn.commit()
+
+        # close db
+        conn.close()
+
+        # redirect back to home
+        return redirect(url_for('quiz_management'))
 
 @app.route('/admin/quiz/deleteq', methods=['GET', 'POST'])
 def delete_question():
+    # if method get
+    if request.method == 'GET':
+        # Get question and quiz info from arg
+        quiz_id = int(request.args.get('quiz_id'))
+        question_id = int(request.args.get('question_id'))
+
+        # Open db
+        conn = sqlite3.connect("app.db")
+        cursor = conn.cursor()
+        
+        # find quiz_name and chapter_name
+        cursor.execute('SELECT name, question_statement FROM questions WHERE id = ? AND quiz_id = ?', (question_id,quiz_id))
+        output = cursor.fetchall()
+        name = output[0][0]
+        question = output[0][1]
+
+        # Create Dictionary for page
+        question = {'id': question_id, 'name': name, 'question': question}
+
+        #close db
+        conn.close()
+
+        # generate page
+        return render_template("delete_question.html", question=question)
+    
+    elif request.method == 'POST':
+        # get question_id from args
+        question_id = request.args.get('question_id')
+
+        # Open db
+        conn = sqlite3.connect("app.db")
+        cursor = conn.cursor()
+        
+        # find quiz_name and chapter_name
+        cursor.execute('DELETE FROM questions WHERE id = ?', (question_id,))
+
+        # commit db
+        conn.commit()
+
+        # close db
+        conn.close()
+
+        # redirect to quiz Management
+        return redirect(url_for('quiz_management'))
+
+
+
     return
 
 @app.route('/admin/quiz/editq', methods=['GET', 'POST'])
 def edit_question():
+    # if method get
+    if request.method == 'GET':
+        # Get question and quiz info from arg
+        question_id = int(request.args.get('question_id'))
+
+        # Open db
+        conn = sqlite3.connect("app.db")
+        cursor = conn.cursor()
+        
+        # find quiz_name and chapter_name
+        cursor.execute('SELECT * FROM questions WHERE id = ?', (question_id,))
+        output_db = cursor.fetchall()
+        output = output_db[0]
+        # questions ( id, name, quiz_id, chapter_id, subject_id, question_statement, option1, option2, option3, option4, correct_option);
+        question_id = int(output[0])
+        name = output[1]
+        quiz_id = int(output[2])
+        chapter_id = int(output[3])
+        subject_id = int(output[4])
+        question = output[5]
+        a = output[6]
+        b = output[7]
+        c = output[8]
+        d = output[9]
+        correct = output[10]
+
+        # Get chapter
+        cursor.execute('SELECT name FROM chapters WHERE id = ?', (chapter_id, ))
+        output = cursor.fetchall()
+        chapter_name = output[0][0]
+
+        # get subject
+        cursor.execute('SELECT name FROM subjects WHERE id = ?', (subject_id, ))
+        output = cursor.fetchall()
+        subject_name = output[0][0]
+
+        # Create Dictionary for page
+        question = {'id': question_id, 'name': name, 'chapter_name': chapter_name, 'subject_name':subject_name, 'question': question, 'a':a, 'b':b, 'c':c, 'd':d, 'correct':correct}
+
+        #close db
+        conn.close()
+
+        # generate page
+        return render_template("edit_question.html", question=question)
+    
+    elif request.method =='POST':
+        # retreieve query elements
+        question_id = request.args.get('question_id')
+
+        # retreive form elements
+        name = request.form.get('name')
+        question = request.form.get('question')
+        a = request.form.get('a')
+        b = request.form.get('b')
+        c = request.form.get('c')
+        d = request.form.get('d')
+        correct = int(request.form.get('correct'))
+
+        #open db
+        conn = sqlite3.connect("app.db")
+        cursor = conn.cursor()
+
+        # write db
+        cursor.execute('UPDATE questions SET name = ?, question_statement = ?, option1 = ?, option2 = ?, option3 = ?, option4 = ?, correct_option = ? WHERE id = ?',
+                       (name, question, a, b, c, d, correct, question_id))
+
+        # commit db
+        conn.commit()
+
+        # close db
+        conn.close()
+
+        # redirect back to home
+        return redirect(url_for('quiz_management'))
     return
 
 # Admin_summary
@@ -454,6 +724,9 @@ def edit_question():
 def admin_summary():
     return
 
+@app.route('/admin/logout')
+def admin_logout():
+    return
 
 
 # student routes

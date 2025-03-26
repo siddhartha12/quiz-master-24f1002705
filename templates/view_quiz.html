@@ -80,6 +80,13 @@
                         </b>{{ quiz['remarks'] }}
                     </p>
                 </div>
+                <div class="p-4">
+                    <a href="{{ url_for('delete_quiz', quiz_id = quiz['id'])}}" >
+                        <button class="btn btn-danger">
+                            Delete Quiz
+                        </button>
+                    </a>
+                </div>
             </div>
         </div>            
     </div>
