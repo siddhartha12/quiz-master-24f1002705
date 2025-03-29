@@ -20,6 +20,11 @@ def login():
         cursor = conn.cursor()
         cursor.execute("SELECT id, password FROM users WHERE username = ?", (username,))
         output = cursor.fetchall()
+        print(output)
+
+        if output == []:
+            return redirect(url_for('login'))
+        
         user_id = output[0][0]
         db_password = output[0][1]
 
@@ -722,7 +727,45 @@ def edit_question():
 # Admin_summary
 @app.route('/admin/summary', methods=['GET', 'POST'])
 def admin_summary():
-    return
+    # Open db
+    conn = sqlite3.connect("app.db")
+    cursor = conn.cursor()
+    # No. of attempts for each quiz and average score, highest scorer
+    cursor.execute('SELECT COUNT(*), AVG(total_scored), MAX(total_scored), quiz_id FROM scores GROUP BY quiz_id')
+    output = cursor.fetchall()
+    quiz_scores = []
+    subject_scores = []
+    for row in output:
+        noattempts = row[0]
+        average = row[1]
+        max = row[2]
+        quiz_id = row[3]
+
+        cursor.execute('SELECT name FROM quizzes WHERE id = ?', (quiz_id,))
+        output = cursor.fetchall()
+        quiz_name = output[0][0]
+
+        quiz_scores.append({'id': quiz_id, 'name': quiz_name, 'attempts': noattempts, 'avg': average, 'max': max})
+
+    # Subject wise user attempts
+    cursor.execute('SELECT COUNT(*), AVG(total_scored), MAX(total_scored), subject_id FROM scores INNER JOIN quizzes ON scores.quiz_id = quizzes.id GROUP BY subject_id')
+    output = cursor.fetchall()
+
+    for row in output:
+        noattempts = row[0]
+        average = row[1]
+        max = row[2]
+        subject_id = row[3]
+
+        cursor.execute('SELECT name FROM subjects WHERE id = ?', (subject_id,))
+        output = cursor.fetchall()
+        subject_name = output[0][0]
+
+        subject_scores.append({'id': subject_id, 'name': subject_name, 'attempts': noattempts, 'avg': average, 'max': max})
+
+    conn.close()
+
+    return render_template('admin_summary.html', quizzes= quiz_scores, subjects=subject_scores)
 
 @app.route('/admin/search', methods=['GET','POST'])
 def admin_search():
@@ -1020,7 +1063,40 @@ def view_scores():
 #summary
 @app.route('/student/summary', methods=['GET', 'POST'])
 def student_summary():
-    return
+    # Open db
+    conn = sqlite3.connect("app.db")
+    cursor = conn.cursor()
+    # Average score of all quizzes
+    # No of quizzes attempted
+    cursor.execute('SELECT COUNT(*), AVG(total_scored) FROM scores WHERE user_id = ?', (session['user_id'],))
+    output = cursor.fetchall()
+
+    stats = {'no': 0, 'avg': 0}
+    stats['no'] = output[0][0]
+    stats['avg'] = output[0][1]
+
+    #Subject wise quizzes marks
+    cursor.execute('SELECT COUNT(*), AVG(total_scored), MAX(total_scored), subject_id FROM scores INNER JOIN quizzes ON scores.quiz_id = quizzes.id WHERE user_id = ? GROUP BY subject_id', (session['user_id'],))
+    output = cursor.fetchall()
+
+    chapter_stats = []
+    for row in output:
+        noa = row[0]
+        avg = row[1]
+        max = row[2]
+        subject_id = row[3]
+
+        chapter_stats.append({'id': subject_id, 'noa': noa, 'avg': avg, 'max': max})
+
+    #Month wise no. of quizzes
+    cursor.execute("SELECT strftime('%m', date_of_quiz) AS month, COUNT(*) FROM quizzes GROUP BY month")
+    output = cursor.fetchall()
+
+    monthwise = []
+    for row in output:
+        monthwise.append({'month': row[0], 'count': row[1]})
+
+    return render_template('user_summary.html', chapters = chapter_stats, months=monthwise)
 
 @app.route('/student/search', methods=['GET', 'POST'])
 def student_search():

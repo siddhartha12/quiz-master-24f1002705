@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<style>
+    a {
+        color: #000;
+        text-decoration: none;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+</style>
+<header class="container p-4 vh-20 vw-100" style="font-size: 25px; text-align: left; margin-left:0px;">
+    <div>
+        <a href='/admin/dashboard'>
+            Home
+        </a>
+        <a href="/admin/quiz">
+            Quiz
+        </a>
+        <a href="/admin/summary">
+            Summary
+        </a>
+        <a href="/admin/logout">
+            Log Out
+        </a>
+        <div style="position: absolute; right: 0; top: 0; padding-top: 20px; padding-right: 30px">
+            <a href="/admin/search">Search</a>
+        <!--<input type="text" placeholder="Search" style="text-align: right; position: right">-->
+        </div>
+    </div>
+</header>
+<body>
+    <div class="container-lg p-4 vh-20 vw-100" style="background-color: #EEE; max-width:100%">
+        <h1 style="padding-left: 40px; padding-top: 10px;">Welcome Admin</h1>
+        <div style="padding-left: 40px; padding-top: 10px; padding-bottom: 10px">
+            <a href="{{ url_for('new_subject')}}"class="btn btn-primary">New Subject</a>
+        </div>
+    </div>
+    <div class="container vw-100"  style="text-align:center">
+        <div class="container vw-100 p-4" style="text-align: center;">
+            <h1>Summary</h1>
+        </div>
+        <div class="row">
+            <div class="col-lg-5 col-md-6 col-sm-12 mb-3">
+                <div class="card p-1 shadow-lg ">
+                    <div class="card-body">
+                        <div class="p-4">
+                            <h1 class="text-center">
+                                Quiz Wise Stats
+                            </h1>
+                        </div>
+                        <table>
+                            <tr>
+                                <th>Quiz ID</th>
+                                <th>Quiz Name</th>
+                                <th>Attempts</th>
+                                <th>Average</th>
+                                <th>Max</th>
+                            </tr>
+                            {% for quiz in quizzes %}
+                            <tr>
+                                <td>{{ quiz['id'] }}</td>
+                                <td>{{ quiz['name'] }}</td>
+                                <td>{{ quiz['attempts'] }}</td>
+                                <td>{{ quiz['avg'] }}</td>
+                                <td>{{ quiz['max'] }}</td>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 col-md-6 col-sm-12 mb-3">
+                <div class="card p-1 shadow-lg ">
+                    <div class="card-body">
+                        <div class="p-4">
+                            <h1 class="text-center">
+                                Subject Wise Stats
+                            </h1>
+                        </div>
+                        <table>
+                            <tr>
+                                <th>Subject ID</th>
+                                <th>Subject Name</th>
+                                <th>Attempts</th>
+                                <th>Average</th>
+                                <th>Max</th>
+                            </tr>
+                            {% for subject in subjects %}
+                            <tr>
+                                <td>{{ subject['id'] }}</td>
+                                <td>{{ subject['name'] }}</td>
+                                <td>{{ subject['attempts'] }}</td>
+                                <td>{{ subject['avg'] }}</td>
+                                <td>{{ subject['max'] }}</td>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<footer>
+
+</footer>
