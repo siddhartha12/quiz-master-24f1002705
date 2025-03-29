@@ -1,5 +1,6 @@
 import sqlite3
 from flask import Flask, redirect, render_template, request, url_for, session
+import time
 
 app = Flask(__name__)
 app.secret_key = 'admin'
@@ -23,9 +24,9 @@ def login():
         db_password = output[0][1]
 
         if db_password == password:
-            session['user'] = username 
+            session['user_id'] = user_id
             conn.close()
-            return redirect(url_for('student_dashboard', user_id = user_id))
+            return redirect(url_for('student_dashboard'))
         
         else:   
             return redirect(url_for('login'))
@@ -371,7 +372,6 @@ def delete_subject():
         conn.close()
 
         return redirect(url_for('admin_dashboard'))
-
 
 #Quiz Management
 @app.route('/admin/quiz', methods=['GET', 'POST'])
@@ -724,6 +724,72 @@ def edit_question():
 def admin_summary():
     return
 
+@app.route('/admin/search', methods=['GET','POST'])
+def admin_search():
+    # Admin can search users, subjects, chapters, quizzes
+    # If get
+    if request.method =='GET':
+        return render_template('admin_search.html')
+    # If post
+    if request.method == 'POST':
+        # First get the term from the form
+        query = request.form.get('query')
+        type = request.form.get('option')
+        formatted_query = f"%{query}%"
+
+        # Open db
+        conn = sqlite3.connect("app.db")
+        cursor = conn.cursor()
+
+        
+        users = []
+        subjects = []
+        chapters = []
+        quizzes = []
+
+        # If users
+        if type == 'users':
+            # Get a list of users
+            cursor.execute('SELECT * FROM users WHERE name LIKE ?', (formatted_query,))
+            output = cursor.fetchall()
+            for row in output:
+                # users(id, name, username, Qualification);
+                users.append({'id': row[0], 'username': row[1], 'qualification': row[2]})
+
+        # IF subject
+        if type  == 'subjects':
+            # Get a list of users
+            cursor.execute('SELECT * FROM subjects WHERE name LIKE ?', (formatted_query,))
+            output = cursor.fetchall()
+            
+            for row in output:
+                # users(id, name, username, Qualification);
+                subjects.append({'id': row[0], 'name': row[1], 'description': row[2]})
+
+        # if chapter
+        if type  == 'chapters':
+            # Get a list of users
+            cursor.execute('SELECT * FROM chapters WHERE name LIKE ?', (formatted_query,))
+            output = cursor.fetchall()
+            
+            for row in output:
+                # users(id, name, username, Qualification);
+                chapters.append({'id': row[0], 'subject_id': row[1], 'name': row[2], 'description': row[3]})
+
+        # if quiz
+        if type  == 'quizzes':
+            # Get a list of users
+            cursor.execute('SELECT * FROM quizzes WHERE name LIKE ?', (formatted_query,))
+            output = cursor.fetchall()
+            
+            for row in output:
+                # quizzes(id, name, subject_id, chapter_id, date_of_quiz, time_duration, remarks TEXT)
+                quizzes.append({'id': row[0], 'name': row[1], 'description': row[6], 'subject_id': row[2], 'chapter_id': row[3], 'date': row[4], 'duration': row[5]})
+
+        conn.close()
+
+        return render_template('admin_search_results.html', users=users, subjects=subjects, chapters=chapters, quizzes=quizzes)
+
 @app.route('/admin/logout')
 def admin_logout():
     session.clear()
@@ -734,6 +800,8 @@ def admin_logout():
 # student routes
 @app.route('/student/dashboard', methods=['GET', 'POST'])
 def student_dashboard():
+    user_id = session['user_id']
+
     #open db
     conn = sqlite3.connect("app.db")
     cursor = conn.cursor()
@@ -744,13 +812,19 @@ def student_dashboard():
     quizzes = []
     for quiz in quizzes_today_db:
         id = quiz[0]
+        cursor.execute('SELECT * FROM scores WHERE user_id = ? AND quiz_id = ?', (user_id, id))
+        out = cursor.fetchall()
+        print(out)
+        not_attempted = 1
+        if len(out) != 0:
+            not_attempted = 0
         name = quiz[1]
         duration = quiz[5]
         cursor.execute('SELECT COUNT(*) FROM questions WHERE quiz_id = ?', (id,))
         output = cursor.fetchall()
         noq = output[0][0]
 
-        quizzes.append({'id': id, 'name': name, 'duration': duration, 'noq': noq})
+        quizzes.append({'id': id, 'name': name, 'duration': duration, 'noq': noq, 'not_attempted': not_attempted})
 
     cursor.execute("SELECT * FROM quizzes WHERE date_of_quiz > date('now')")
     upcoming_quizzes_db = cursor.fetchall()
@@ -814,26 +888,146 @@ def view_quiz():
 
 @app.route('/student/quiz/start', methods=['GET', 'POST'])
 def start_quiz():
-    return
+    quiz_id = request.args.get('quiz_id')
+    session['quiz_id'] = quiz_id
+    session['current_question'] = 0
+    session['start_time'] = time.time()
+    session['answers'] = []
+    session['correct'] = []
+
+    return redirect(url_for('attempt_quiz'))
+
+@app.route('/student/quiz/attempt', methods=['GET', 'POST'])
+def attempt_quiz():
+    quiz_id = session['quiz_id']
+
+    # Connect db
+    conn = sqlite3.connect("app.db")
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT * FROM questions WHERE quiz_id =  ?', (quiz_id,))
+    output_db = cursor.fetchall()
+
+    
+    if session['current_question'] > len(output_db):
+        return redirect(url_for('submit_quiz'))
+
+    output = output_db[session['current_question']]
+
+    conn.close()
+
+    question_id = int(output[0])
+    question = output[5]
+    a = output[6]
+    b = output[7]
+    c = output[8]
+    d = output[9]
+
+    question = {'id': question_id, 'quiz_id': quiz_id, 'question': question, 'a': a, 'b': b, 'c': c, 'd': d,}
+    return render_template('attempt_question.html', question = question)
+
+@app.route('/student/quiz/submit_question', methods=['POST'])
+def submit_answer():
+    option = int(request.form.get('option'))
+
+    question_id = request.args.get('question_id')
+
+    # Connect db
+    conn = sqlite3.connect("app.db")
+    cursor = conn.cursor()
+
+    # Get answers from questions
+    cursor.execute('SELECT correct_option FROM questions WHERE id = ?', (question_id, ))
+    output = cursor.fetchall()
+    correct = output[0][0]
+
+    cursor.execute('SELECT COUNT(*) FROM questions WHERE id = ?', (question_id,))
+    output = cursor.fetchall()
+    noq = output[0][0]
+
+    conn.close()
+
+    
+    session['correct'].append(correct)
+    session['answers'].append(option)
+
+    session['current_question'] += 1
+
+    if session['current_question'] > noq:
+        return redirect(url_for('submit_quiz'))
+
+    return redirect(url_for('attempt_quiz'))
+
+@app.route('/student/quiz/submit_quiz', methods=['GET','POST'])
+def submit_quiz():
+    score = 0
+    for i in range(len(session['correct'])):
+        if session['answers'][i] == session['correct'][i]:
+            score += 1
+    
+    # Connect db
+    conn = sqlite3.connect("app.db")
+    cursor = conn.cursor()
+
+    quiz_id = session['quiz_id']
+    user_id = session['user_id']
+
+    cursor.execute('INSERT INTO scores(quiz_id, user_id, total_scored) VALUES (?, ?, ?)', (quiz_id, user_id, score))
+    # scores(id, quiz_id, user_id, time_stamp_of_attempt, total_scored);
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('student_dashboard'))
 
 #View Quiz Scores
 @app.route('/student/scores', methods=['GET', 'POST'])
 def view_scores():
-    return
+    user_id = session['user_id']
+
+    #open db
+    conn = sqlite3.connect("app.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM scores WHERE user_id = ?", (user_id,))
+    scores_db = cursor.fetchall()
+
+    scores = []
+    for score in scores_db:
+        #TABLE(id, quiz_id, user_id, time_stamp_of_attempt, total_scored);
+        id = score[1]
+        #date
+        cursor.execute('SELECT name FROM quizzes WHERE id = ?', (id,))
+        output = cursor.fetchall()
+        name = output[0][0]
+        #no of questions
+        cursor.execute('SELECT COUNT(*) FROM questions WHERE quiz_id = ?', (id,))
+        output = cursor.fetchall()
+        noq = output[0][0]
+
+        timestamp = score[3]
+
+        user_score = score[4]
+        scores.append({'id': id, 'name': name, 'noq': noq, 'timestamp': timestamp, 'score': user_score})
+
+    conn.close()
+
+    return render_template("view_scores.html", scores=scores)
 
 #summary
 @app.route('/student/summary', methods=['GET', 'POST'])
 def student_summary():
     return
-# App routes (For admin)
-# Admin_dashboard - New Subject, New chapter, 
-# Quiz Management - Add Quiz, New question
-# Summary
 
-# App routes (for student)
-# Dashboard
-# Quiz_Attempt
-# ViewQuiz
-# Scores
+@app.route('/student/search', methods=['GET', 'POST'])
+def student_search():
+    # Student can search Subjects, Chapters, and Quizzes
+    return
+
+@app.route('/student/logout')
+def student_logout():
+    session.clear()
+    return redirect('/')
+
 if __name__ == '__main__':
     app.run(debug=True)

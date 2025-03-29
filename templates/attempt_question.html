@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="d-flex justify-content-center align-items-center vh-100">
+    <div class="card p-4 shadow-lg">
+        <div class="p-4">
+            <h1 class="text-center">Quiz</h1>
+        </div>
+        <p class="text-center" style="padding-bottom:10px;"> {{ question['question'] }} </p>
+        <form action="{{ url_for('submit_answer', question_id = question['id']) }}" method="POST">
+
+            <div class="mb-3">
+                <input type="radio" value="1" name="option">
+                {{ question['a'] }}
+            <br>
+                <input type="radio" value="2" name="option" class="radio">
+                {{ question['b'] }}
+            <br>
+                <input type="radio" value="3" name="option" class="radio">
+                {{ question['c'] }}
+            <br>
+                <input type="radio" value="4" name="option" class="radio">
+                {{ question['d'] }}
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </form>
+        <a href="{{ url_for('submit_quiz') }}" method="POST" class="'btn btn-primary">
+            Submit Quiz
+        </a>
+    </div>
+
+    <!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>-->
+</body>
+</html>

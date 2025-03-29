@@ -35,30 +35,31 @@
     </div>
 </header>
 <body>
-    <div class="container vw-100"  style="text-align:center">
-        <div class="card p-1 shadow-lg ">
-            <div class="card-body">
-                <div class="p-4">
-                    <h1 class="text-center">
-                        New Subject
-                    </h1>
-                </div>
-                <form action="{{ url_for('new_subject')}}" method="POST">
-                    <div class="p-4">
-                        <label for="name" name="name">Name</label>
-                        <input type="text" id="name" name="name" class="form form-control">
-                    </div>
-                    <div class="p-4">
-                        <label for="description" name="description">Description</label>
-                        <input type="text" id="description" name="description" class="form form-control">
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Submit</button>
-                    </div>
-                </form>
-                
+    <div class="card p-4 shadow-lg">
+        <div class="p-4" style="text-align: center;">
+            <h1>Search</h1>
+        </div>
+        <form action="{{ url_for('admin_search') }}" method="POST">
+            <input type='text' id='query' name="query">
+
+            <div class="mb-3">
+                <input type="radio" value="users" name="option">
+                Users
+            <br>
+                <input type="radio" value="subjects" name="option" class="radio">
+                Subjects
+            <br>
+                <input type="radio" value="chapters" name="option" class="radio">
+                Chapters
+            <br>
+                <input type="radio" value="quizzes" name="option" class="radio">
+                Quizzes
             </div>
-        </div>            
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>         
     </div>
 </body>
 <footer>
