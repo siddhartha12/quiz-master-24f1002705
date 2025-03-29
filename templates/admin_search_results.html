@@ -89,14 +89,14 @@
             <table>
                 <tr>
                     <th>ID</th>
-                    <th>Subject ID</th>
+                    <th>Subject Name</th>
                     <th>Name</th>
                     <th>Description</th> 
                 </tr>
                 {% for chapter in chapters %}
                 <tr>
                     <td>{{ chapter['id'] }}</td>
-                    <td>{{ chapter['subject_id'] }}</td>
+                    <td>{{ chapter['subject_name'] }}</td>
                     <td>{{ chapter['name'] }}</td>
                     <td>{{ chapters['description'] }}</td>
                 </tr>

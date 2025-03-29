@@ -774,7 +774,10 @@ def admin_search():
             
             for row in output:
                 # users(id, name, username, Qualification);
-                chapters.append({'id': row[0], 'subject_id': row[1], 'name': row[2], 'description': row[3]})
+                cursor.execute('SELECT name FROM subjects WHERE id = ?', (row[1],))
+                subject_db = cursor.fetchall()
+                subject_name = subject_db[0][0]
+                chapters.append({'id': row[0], 'subject_name': subject_name, 'name': row[2], 'description': row[3]})
 
         # if quiz
         if type  == 'quizzes':
@@ -1022,7 +1025,61 @@ def student_summary():
 @app.route('/student/search', methods=['GET', 'POST'])
 def student_search():
     # Student can search Subjects, Chapters, and Quizzes
-    return
+    # If get
+    if request.method =='GET':
+        return render_template('user_search.html')
+    # If post
+    if request.method == 'POST':
+        # First get the term from the form
+        query = request.form.get('query')
+        type = request.form.get('option')
+        formatted_query = f"%{query}%"
+
+        # Open db
+        conn = sqlite3.connect("app.db")
+        cursor = conn.cursor()
+
+        subjects = []
+        chapters = []
+        quizzes = []
+
+        # IF subject
+        if type  == 'subjects':
+            # Get a list of users
+            cursor.execute('SELECT * FROM subjects WHERE name LIKE ?', (formatted_query,))
+            output = cursor.fetchall()
+            
+            for row in output:
+                # users(id, name, username, Qualification);
+                subjects.append({'id': row[0], 'name': row[1], 'description': row[2]})
+
+        # if chapter
+        if type  == 'chapters':
+            # Get a list of users
+            cursor.execute('SELECT * FROM chapters WHERE name LIKE ?', (formatted_query,))
+            output = cursor.fetchall()
+            
+            for row in output:
+                # users(id, name, username, Qualification);
+                cursor.execute('SELECT name FROM subjects WHERE id = ?', (row[1],))
+                subject_db = cursor.fetchall()
+                subject_name = subject_db[0][0]
+                chapters.append({'id': row[0], 'subject_name': subject_name, 'name': row[2], 'description': row[3]})
+
+        # if quiz
+        if type  == 'quizzes':
+            # Get a list of users
+            cursor.execute('SELECT * FROM quizzes WHERE name LIKE ?', (formatted_query,))
+            output = cursor.fetchall()
+            
+            for row in output:
+                # quizzes(id, name, subject_id, chapter_id, date_of_quiz, time_duration, remarks TEXT)
+                quizzes.append({'id': row[0], 'name': row[1], 'description': row[6], 'subject_id': row[2], 'chapter_id': row[3], 'date': row[4], 'duration': row[5]})
+
+        conn.close()
+
+        return render_template('user_search_results.html', subjects=subjects, chapters=chapters, quizzes=quizzes)
+
 
 @app.route('/student/logout')
 def student_logout():
