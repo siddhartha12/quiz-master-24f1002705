@@ -35,12 +35,14 @@ def login():
         
         else:   
             return redirect(url_for('login'))
-        
+
+# User Registration
 @app.route('/register', methods=['GET'])
 def register():
     # Simply Generate Template here, nothing to do more
     return render_template('registration.html')
 
+# Registering the user into the db
 @app.route('/register', methods=['POST'])
 def register_details():
     # Initialize SQL
@@ -65,6 +67,7 @@ def register_details():
         return render_template('registration.html', message='Invalid Username')
 
 #Admin routes
+#Admin Login
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'GET':
@@ -306,6 +309,7 @@ def new_subject():
 
         return redirect(url_for('admin_dashboard'))
 
+# Edit Subject
 @app.route('/admin/dashboard/subject', methods=['GET', 'POST'])
 def edit_subject():
     # retrieve subject id
@@ -348,6 +352,7 @@ def edit_subject():
 
     # IF request post
 
+# Delete Subject
 @app.route('/admin/dashboard/subject/delete', methods=['GET', 'POST'])
 def delete_subject():
     # retreive subject id
@@ -452,6 +457,7 @@ def edit_quiz():
     # Render Webpage
     return render_template('edit_quiz.html', quiz=quiz)
 
+# Delete Quiz
 @app.route('/admin/quiz/delete', methods=['GET','POST'])
 def delete_quiz():
     # Get quiz id
@@ -473,6 +479,7 @@ def delete_quiz():
 
     return redirect(url_for('quiz_management'))
 
+# New Quiz
 @app.route('/admin/quiz/add', methods=['GET', 'POST'])
 def new_quiz():
     if request.method == 'GET':
@@ -529,6 +536,7 @@ def new_quiz():
         return redirect(url_for('quiz_management'))
         #return render_template('new_quiz.html')
 
+# New Questions
 @app.route('/admin/quiz/newq', methods=['GET', 'POST'])
 def new_question():
     # if get
@@ -603,6 +611,7 @@ def new_question():
         # redirect back to home
         return redirect(url_for('quiz_management'))
 
+# Delete Question
 @app.route('/admin/quiz/deleteq', methods=['GET', 'POST'])
 def delete_question():
     # if method get
@@ -654,6 +663,7 @@ def delete_question():
 
     return
 
+# Edit Question
 @app.route('/admin/quiz/editq', methods=['GET', 'POST'])
 def edit_question():
     # if method get
@@ -775,6 +785,7 @@ def admin_summary():
 
     return render_template('admin_summary.html', quizzes= quiz_scores, subjects=subject_scores)
 
+# Search for admin
 @app.route('/admin/search', methods=['GET','POST'])
 def admin_search():
     # Admin can search users, subjects, chapters, quizzes
@@ -844,14 +855,15 @@ def admin_search():
 
         return render_template('admin_search_results.html', users=users, subjects=subjects, chapters=chapters, quizzes=quizzes)
 
+# Log abmind out
 @app.route('/admin/logout')
 def admin_logout():
     session.clear()
 
     return redirect(url_for('login'))
 
-
 # student routes
+# Student Dashboard
 @app.route('/student/dashboard', methods=['GET', 'POST'])
 def student_dashboard():
     user_id = session['user_id']
@@ -897,7 +909,7 @@ def student_dashboard():
 
     return render_template('user_dashboard.html', quizzes=quizzes, upcoming_quizzes = upcoming_quizzes)
 
-# Attempting the quiz
+# Seeing the details of the quiz
 @app.route('/student/quiz/view', methods=['GET', 'POST'])
 def view_quiz():
     # Get quiz id
@@ -940,6 +952,7 @@ def view_quiz():
     # Render Webpage
     return render_template('view_quiz.html', quiz=quiz)
 
+# Start the quiz
 @app.route('/student/quiz/start', methods=['GET', 'POST'])
 def start_quiz():
     quiz_id = request.args.get('quiz_id')
@@ -951,6 +964,7 @@ def start_quiz():
 
     return redirect(url_for('attempt_quiz'))
 
+# Start attempt
 @app.route('/student/quiz/attempt', methods=['GET', 'POST'])
 def attempt_quiz():
     quiz_id = session['quiz_id']
@@ -980,6 +994,7 @@ def attempt_quiz():
     question = {'id': question_id, 'quiz_id': quiz_id, 'question': question, 'a': a, 'b': b, 'c': c, 'd': d,}
     return render_template('attempt_question.html', question = question)
 
+# Submit route for each individual question
 @app.route('/student/quiz/submit_question', methods=['POST'])
 def submit_answer():
     option = int(request.form.get('option'))
@@ -1007,11 +1022,12 @@ def submit_answer():
 
     session['current_question'] += 1
 
-    if session['current_question'] > noq:
+    if session['current_question'] >= noq:
         return redirect(url_for('submit_quiz'))
 
     return redirect(url_for('attempt_quiz'))
 
+# Submit the entire quiz (available at every question)
 @app.route('/student/quiz/submit_quiz', methods=['GET','POST'])
 def submit_quiz():
     score = 0
@@ -1034,7 +1050,7 @@ def submit_quiz():
 
     return redirect(url_for('student_dashboard'))
 
-#View Quiz Scores
+# View Past Quiz Scores
 @app.route('/student/scores', methods=['GET', 'POST'])
 def view_scores():
     user_id = session['user_id']
@@ -1068,7 +1084,7 @@ def view_scores():
 
     return render_template("view_scores.html", scores=scores)
 
-#summary
+# Student summary
 @app.route('/student/summary', methods=['GET', 'POST'])
 def student_summary():
     # Open db
@@ -1106,6 +1122,7 @@ def student_summary():
 
     return render_template('user_summary.html', chapters = chapter_stats, months=monthwise)
 
+# Student Search
 @app.route('/student/search', methods=['GET', 'POST'])
 def student_search():
     # Student can search Subjects, Chapters, and Quizzes
@@ -1164,7 +1181,7 @@ def student_search():
 
         return render_template('user_search_results.html', subjects=subjects, chapters=chapters, quizzes=quizzes)
 
-
+# Log student out
 @app.route('/student/logout')
 def student_logout():
     session.clear()
