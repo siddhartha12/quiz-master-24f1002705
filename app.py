@@ -64,8 +64,6 @@ def register_details():
     else:
         return render_template('registration.html', message='Invalid Username')
 
-admin_username = "admin"
-admin_password = "password"
 #Admin routes
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -75,8 +73,17 @@ def admin_login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        if ((username == admin_username) and (password == admin_password)):
-            session['user'] = admin_username
+
+        #Open DB
+        conn = sqlite3.connect("app.db")
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT password FROM admins WHERE username = ?', (username,))
+        output = cursor.fetchall()
+        admin_password = output[0][0]
+
+        if ((password == admin_password)):
+            session['user'] = username
             return redirect(url_for('admin_dashboard'))
         else:
             return render_template('admin_login.html', login_fail = 1)
@@ -301,11 +308,12 @@ def new_subject():
 
 @app.route('/admin/dashboard/subject', methods=['GET', 'POST'])
 def edit_subject():
-    # retreive subject id
+    # retrieve subject id
     subject_id = int(request.args.get('subject_id'))
-    # if get
+
+    # if using get
     if request.method =='GET':
-        # Open Database
+        # Open Db
         conn = sqlite3.connect("app.db")    
         cursor = conn.cursor()
 
